@@ -1,7 +1,7 @@
 import random
 import numpy as np
 
-
+#TODO(1) level 1 : instead of a single function, we can use a list of function pointers (one function for each layer)
 
 class Network:
 
@@ -16,14 +16,14 @@ class Network:
         self.__weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
 
         #activation function and its derivative for all layers exept output layer (for now)
-        #TODO(1) level 1 : instead of a single function, we can use a list of function pointers (one function for each layer)
+        #TODO(1)
         self.__activation_func = self.sigmoid
         self.__activation_prime = self.sigmoid_prime
         
         self.__cost_derivative = self.quadratic_cost_derivative
 
     #given the input a, return the output of the network (for now, using sigmoid only)
-    def feedforward(self, a):
+    def __feedforward(self, a):
         #feedforward the input a through the network
         for b, w in zip(self.__biases, self.__weights):
             #TODO(1)
@@ -42,9 +42,11 @@ class Network:
         #TODO(1)
         activation = x
         #list to store all the activations, layer by layer
+        #TODO(1)
         activations = [x]
         #list to store all the z vectors, layer by layer
         zs = []
+        #feedforward the input x through the network and store the activations and z vectors
         for b, w in zip(self.__biases, self.__weights):
             z = np.dot(w, activation) + b
             zs.append(z)
@@ -69,7 +71,17 @@ class Network:
 
         return nabla_b, nabla_w
 
+    def __set_cost_function(self, cost_function):
 
+        cost_functions = {
+            'quadratic': self.quadratic_cost_derivative,
+            'huber': self.huber_loss_derivative
+        }
+
+        if cost_function in cost_functions:
+            self.__cost_derivative = cost_functions[cost_function]
+        else:
+            raise ValueError('Cost function not recognized')
 
     #looks scary, but the only thing it does is setting the activation function
     #input: string with the name of the activation function
