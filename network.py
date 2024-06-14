@@ -20,6 +20,27 @@ class Network:
         self.__activation_prime = self.sigmoid_prime
 
 
+    
+
+    #looks scary, but the only thing it does is setting the activation function
+    #input: string with the name of the activation function
+    def __set_activation_function(self, func):
+
+        #dictionary (of tuples) with all activation functions and their derivatives
+        activation_functions = {
+            'relu': (self.relu, self.relu_prime),
+            'sigmoid': (self.sigmoid, self.sigmoid_prime),
+            'tanh': (self.tanh, self.tanh_prime),
+            'softmax': (self.softmax, self.softmax_prime),
+            'linear': (self.linear, self.linear_prime)
+        }
+        
+        #if the function is in the dictionary, set the activation function and its derivative
+        if func in activation_functions:
+            self.__activation_func, self.__activation_prime = activation_functions[func]
+        else:
+            raise ValueError('Activation function not recognized')
+
 
     # activation functions and their derivatives
 
