@@ -16,14 +16,16 @@ class Network:
         self.__weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
 
         #activation function and its derivative for all layers exept output layer (for now)
+        #TODO(1) level 1 : instead of a single function, we can use a list of function pointers (one function for each layer)
+        #TODO(1) level 2 : we can have a list of vectors (one vector for each layer) to control the activation function of *each neuron*
         self.__activation_func = self.sigmoid
         self.__activation_prime = self.sigmoid_prime
 
     #given the input a, return the output of the network (for now, using sigmoid only)
-    #TODO (1)we can change the activation function for each layer (using a list of function names)
     def feedforward(self, a):
         #feedforward the input a through the network
         for b, w in zip(self.__biases, self.__weights):
+            #TODO(1)
             a = self.__activation_func(np.dot(w, a) + b)
         return a
 
