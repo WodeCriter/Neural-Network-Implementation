@@ -32,7 +32,7 @@ class Network:
 
 
     #TODO(1)
-    def backpropagation(self, x, y):
+    def __backpropagation(self, x, y):
         #initialize the lists for the gradients of the cost function
         #with respect to the biases and weights
         nabla_b = [np.zeros(b.shape) for b in self.__biases]
@@ -83,7 +83,7 @@ class Network:
         else:
             raise ValueError('Cost function not recognized')
 
-    #looks scary, but the only thing it does is setting the activation function
+
     #input: string with the name of the activation function
     def __set_activation_function(self, func):
 
