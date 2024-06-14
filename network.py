@@ -19,6 +19,13 @@ class Network:
         self.__activation_func = self.sigmoid
         self.__activation_prime = self.sigmoid_prime
 
+    #given the input a, return the output of the network (for now, using sigmoid only)
+    #TODO (1)we can change the activation function for each layer (using a list of function names)
+    def feedforward(self, a):
+        #feedforward the input a through the network
+        for b, w in zip(self.__biases, self.__weights):
+            a = self.__activation_func(np.dot(w, a) + b)
+        return a
 
     
 
