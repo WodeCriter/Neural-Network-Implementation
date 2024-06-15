@@ -102,11 +102,18 @@ class Network:
 
         return nabla_b, nabla_w
 
-    def score(self, test_data):
+    #input: test_data - list of tuples (x, y) where x is the input and y is the expected output
+    #output: list of tuples (prediction, expected) for each input in the test_data
+    #TODO (1)
+    def __predict_batch(self, test_data):
         #get the number of correct predictions
         test_results = [(np.argmax(self.__feedforward(x)), np.argmax(y)) for (x, y) in test_data]
-        return sum(int(x == y) for (x, y) in test_results) / len(test_data)
+        return test_results
 
+    #input: test_data - list of tuples (x, y) where x is the input and y is the expected output
+    #output: the accuracy of the network on the test_data
+    def score(self, test_data):
+        return sum(int(x == y) for (x, y) in self.predict_batch(test_data)) / len(test_data)
     #setters
 
     #input: string with the name of the activation function
