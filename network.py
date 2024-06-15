@@ -30,6 +30,37 @@ class Network:
             a = self.__activation_func(np.dot(w, a) + b)
         return a
 
+    def train(self, training_data,  mini_batch_size, learningRate = 0.1, epochs = 1000):
+
+        #for each epoch
+        for j in range(epochs):
+            #shuffle the training data
+            random.shuffle(training_data)
+            #divide the training data into mini batches
+            mini_batches = [training_data[k:k + mini_batch_size] for k in range(0, len(training_data), mini_batch_size)]
+            #for each mini batch
+            for mini_batch in mini_batches:
+                #update the weights and biases using the gradients of the cost function
+                self.update_mini_batch(mini_batch, learningRate)
+
+    #input: eta - learning rate
+    def update_mini_batch(self, mini_batch, eta):
+        #initialize the lists for the gradients of the cost function
+        #with respect to the biases and weights
+        nabla_b = [np.zeros(b.shape) for b in self.__biases]
+        nabla_w = [np.zeros(w.shape) for w in self.__weights]
+
+        #for each training example x, y in the mini_batch, accumulate the gradients
+        for x, y in mini_batch:
+            #compute the gradients of the cost function using backpropagation
+            delta_nabla_b, delta_nabla_w = self.__backpropagation(x, y)
+            #accumulate the gradients of the batch
+            nabla_b = [nb + dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
+            nabla_w = [nw + dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
+
+        #update the weights and biases using the gradients and the learning rate eta
+        self.__weights = [w - (eta / len(mini_batch)) * nw for w, nw in zip(self.__weights, nabla_w)]
+        self.__biases = [b - (eta / len(mini_batch)) * nb for b, nb in zip(self.__biases, nabla_b)]
 
     #TODO(1)
     def __backpropagation(self, x, y):
