@@ -102,10 +102,10 @@ class Network:
 
         return nabla_b, nabla_w
 
-    def predict_batch(self, test_data):
+    def score(self, test_data):
         #get the number of correct predictions
         test_results = [(np.argmax(self.__feedforward(x)), np.argmax(y)) for (x, y) in test_data]
-        return sum(int(x == y) for (x, y) in test_results)
+        return sum(int(x == y) for (x, y) in test_results) / len(test_data)
 
     #setters
 
