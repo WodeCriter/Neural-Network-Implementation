@@ -102,6 +102,14 @@ class Network:
 
         return nabla_b, nabla_w
 
+    def predict_batch(self, test_data):
+        #get the number of correct predictions
+        test_results = [(np.argmax(self.__feedforward(x)), np.argmax(y)) for (x, y) in test_data]
+        return sum(int(x == y) for (x, y) in test_results)
+
+    #setters
+
+    #input: string with the name of the activation function
     def __set_cost_function(self, cost_function):
 
         cost_functions = {
