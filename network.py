@@ -113,7 +113,7 @@ class Network:
     #input: test_data - list of tuples (x, y) where x is the input and y is the expected output
     #output: the accuracy of the network on the test_data
     def score(self, test_data):
-        return sum(int(x == y) for (x, y) in self.predict_batch(test_data)) / len(test_data)
+        return sum(int(x == y) for (x, y) in self.__predict_batch(test_data)) / len(test_data)
     #setters
 
     #input: string with the name of the activation function
