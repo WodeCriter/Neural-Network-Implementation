@@ -102,7 +102,7 @@ class Network:
 
         return nabla_b, nabla_w
 
-    #TODO (1
+    #TODO (1)
     def predict(self, x):
         return np.argmax(self.__feedforward(x))
 
