@@ -5,7 +5,7 @@ import numpy as np
 
 class Network:
 
-    def __init__(self, sizes):
+    def __init__(self, sizes , activations = None , cost_function = 'quadratic' , output_activation = 'softmax'):
         #number of layers in the network
         self.__num_layers = len(sizes)
         #number of neurons in each layer
@@ -137,7 +137,21 @@ class Network:
 
 
     #input: string with the name of the activation function
-    def __set_activation_function(self, func):
+    def ___create_activation_function_lists(self, activations , size_list_len , output_activation):
+        activation_func_list = []
+        activation_prime_list = []
+        if activations is None:
+            activations = ['sigmoid'] * (size_list_len - 2) + [output_activation]
+
+        if len(activations) != size_list_len - 1:
+            raise ValueError('The number of activation functions must be equal to : (the number of layers) - 1 ')
+
+        for name in activations:
+            func , prime = self.__get_activation_function(name)
+            activation_func_list.append(func)
+            activation_prime_list.append(prime)
+
+    def __get_activation_function(self, func_name):
 
         #dictionary (of tuples) with all activation functions and their derivatives
         activation_functions = {
@@ -145,12 +159,13 @@ class Network:
             'sigmoid': (self.sigmoid, self.sigmoid_prime),
             'tanh': (self.tanh, self.tanh_prime),
             'softmax': (self.softmax, self.softmax_prime),
-            'linear': (self.linear, self.linear_prime)
+            'linear': (self.linear, self.linear_prime),
+            'argmax': (np.argmax, 1)
         }
         
         #if the function is in the dictionary, set the activation function and its derivative
-        if func in activation_functions:
-            self.__activation_func, self.__activation_prime = activation_functions[func]
+        if func_name in activation_functions:
+            return activation_functions[func_name]
         else:
             raise ValueError('Activation function not recognized')
 
