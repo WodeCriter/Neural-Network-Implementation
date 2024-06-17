@@ -2,7 +2,7 @@ import random
 import numpy as np
 
 #TODO(1) level 1 : instead of a single function, we can use a list of function pointers (one function for each layer)
-
+#TODO 1 change the feedforward function to use the list of activation functions and so on
 class Network:
 
     def __init__(self, sizes , activations = None , cost_function = 'quadratic' , output_activation = 'softmax'):
@@ -14,11 +14,13 @@ class Network:
         self.__biases = [np.random.randn(y, 1) for y in sizes[1:]]
         #initialize weights for each layer
         self.__weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
+        #stores a activation function name for each layer
+        self.activation_function_list = None
 
         #activation function and its derivative for all layers exept output layer (for now)
         #TODO(1)
-        self.__activation_func = self.sigmoid
-        self.__activation_prime = self.sigmoid_prime
+        self.__activation_func , self.__activation_prime  = self.___create_activation_function_lists(activations , self.__num_layers , output_activation)
+        
         
         self.__cost_derivative = self.quadratic_cost_derivative
 
@@ -146,10 +148,14 @@ class Network:
         if len(activations) != size_list_len - 1:
             raise ValueError('The number of activation functions must be equal to : (the number of layers) - 1 ')
 
+        self.activation_function_list = activations
+
         for name in activations:
             func , prime = self.__get_activation_function(name)
             activation_func_list.append(func)
             activation_prime_list.append(prime)
+        
+        return activation_func_list , activation_prime_list
 
     def __get_activation_function(self, func_name):
 
