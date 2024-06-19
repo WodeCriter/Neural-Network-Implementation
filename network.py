@@ -5,7 +5,7 @@ import numpy as np
 
 class Network:
 
-    def __init__(self, sizes):
+    def __init__(self, sizes, activation_func_name = "sigmoid"):
         #number of layers in the network
         self.__num_layers = len(sizes)
         #number of neurons in each layer
@@ -15,10 +15,28 @@ class Network:
 
         #activation function and its derivative for all layers exept output layer (for now)
         #TODO(1)
-        self.__activation_func = self.sigmoid
-        self.__activation_prime = self.sigmoid_prime
-        
+        self.__init_activation_func_for_all_layers(activation_func_name)
         self.__cost_derivative = self.quadratic_cost_derivative
+
+    def __init_activation_func_for_all_layers(self, activation_func_name):
+        match activation_func_name:
+            case "relu":
+                self.__activation_func = Activation_Functions.relu
+                self.__activation_prime = Activation_Functions.relu_derivative
+            case "sigmoid":
+                self.__activation_func = Activation_Functions.sigmoid
+                self.__activation_prime = Activation_Functions.sigmoid_derivative
+            case "tanh":
+                self.__activation_func = Activation_Functions.tanh
+                self.__activation_prime = Activation_Functions.tanh_derivative
+            case "softmax":
+                self.__activation_func = Activation_Functions.softmax
+                self.__activation_prime = Activation_Functions.softmax_derivative
+            case "linear":
+                self.__activation_func = Activation_Functions.linear
+                self.__activation_prime = Activation_Functions.linear_derivative
+            case other:
+                raise ValueError(f"{self.__kernel} does not exist")
 
     #given the input a, return the output of the network (for now, using sigmoid only)
     def __feedforward(self, a):
@@ -151,45 +169,6 @@ class Network:
             self.__activation_func, self.__activation_prime = activation_functions[func]
         else:
             raise ValueError('Activation function not recognized')
-
-
-    # activation functions and their derivatives
-
-    #--relu--
-    def relu(self, z):
-        return np.maximum(z, 0)
-    
-    def relu_prime(self, z):
-        return np.where(z > 0, 1, 0)
-    
-    #--sigmoid--
-    def sigmoid(self, z):
-        return 1.0 / (1.0 + np.exp(-z))
-    
-    def sigmoid_prime(self, z):
-        return self.sigmoid(z) * (1 - self.sigmoid(z))
-    
-    #--tanh--
-    def tanh(self, z):
-        return np.tanh(z)
-    
-    def tanh_prime(self, z):
-        return 1 - np.tanh(z)**2
-    
-    #--softmax--
-    def softmax(self, z):
-        return np.exp(z) / np.sum(np.exp(z), axis=0)
-    
-    def softmax_prime(self, z):
-        return self.softmax(z) * (1 - self.softmax(z))
-    
-    #--linear--
-    def linear(self, z):
-        return z
-    
-    def linear_prime(self, z):
-        return 1
-    
 
 
     #loss function derivatives
