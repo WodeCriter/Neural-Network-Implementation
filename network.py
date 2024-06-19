@@ -87,13 +87,14 @@ class Network:
             #TODO(1)
             activation = self.__activation_func[i](z)
             activations.append(activation)
+            i += 1
 
         #backward pass
         #calculate the error in the output layer
-        delta = self.__cost_derivative(activations[-1], y) * self.__activation_prime(zs[-1])
+        delta = self.__cost_derivative(activations[-1], y) * self.__activation_prime[-1](zs[-1])
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
-
+        i -= 1
         #propagate the error to the previous layers
         for l in range(2, self.__num_layers):
             z = zs[-l]
@@ -221,8 +222,10 @@ class Network:
 
     #--quadratic cost--
     def quadratic_cost_derivative(self, output_activations, y):
+        y = y.reshape(-1, 1)
         return (output_activations - y)
     
     #--huber loss--
     def huber_loss_derivative(self, output_activations, y):
+        y = y.reshape(-1, 1)
         return np.where(np.abs(output_activations - y) <= 1, output_activations - y, np.sign(output_activations - y))
