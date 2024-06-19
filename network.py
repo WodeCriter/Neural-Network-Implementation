@@ -26,10 +26,12 @@ class Network:
 
     #given the input a, return the output of the network (for now, using sigmoid only)
     def __feedforward(self, a):
+        i = 0
         #feedforward the input a through the network
         for b, w in zip(self.__biases, self.__weights):
             #TODO(1)
-            a = self.__activation_func(np.dot(w, a) + b)
+            a = self.__activation_func[i](np.dot(w, a) + b)
+            i += 1
         return a
 
     def train(self, training_data,  mini_batch_size, learningRate = 0.1, epochs = 1000):
@@ -70,12 +72,11 @@ class Network:
         #with respect to the biases and weights
         nabla_b = [np.zeros(b.shape) for b in self.__biases]
         nabla_w = [np.zeros(w.shape) for w in self.__weights]
+        i = 0
 
         #feedforward
-        #TODO(1)
         activation = x
         #list to store all the activations, layer by layer
-        #TODO(1)
         activations = [x]
         #list to store all the z vectors, layer by layer
         zs = []
@@ -84,7 +85,7 @@ class Network:
             z = np.dot(w, activation) + b
             zs.append(z)
             #TODO(1)
-            activation = self.__activation_func(z)
+            activation = self.__activation_func[i](z)
             activations.append(activation)
 
         #backward pass
@@ -97,16 +98,17 @@ class Network:
         for l in range(2, self.__num_layers):
             z = zs[-l]
             #TODO(1)
-            ap = self.__activation_prime(z)
+            ap = self.__activation_prime[i](z)
             delta = np.dot(self.__weights[-l + 1].transpose(), delta) * ap
             nabla_b[-l] = delta
             nabla_w[-l] = np.dot(delta, activations[-l - 1].transpose())
+            i -= 1
 
         return nabla_b, nabla_w
 
     #TODO (1)
     def predict(self, x):
-        return np.argmax(self.__feedforward(x))
+        return self.__activation_prime[self.__num_layers -1 ](self.__feedforward(x))
 
 
     #input: test_data - list of tuples (x, y) where x is the input and y is the expected output
@@ -114,7 +116,7 @@ class Network:
     #TODO (1)
     def __predict_batch(self, test_data):
         #get the number of correct predictions
-        test_results = [(np.argmax(self.__feedforward(x)), np.argmax(y)) for (x, y) in test_data]
+        test_results = [(self.__activation_prime[self.__num_layers -1](self.__feedforward(x)), self.__activation_prime[self.__num_layers-1](y)) for (x, y) in test_data]
         return test_results
 
 
