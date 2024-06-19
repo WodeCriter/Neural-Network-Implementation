@@ -109,7 +109,7 @@ class Network:
 
     #TODO (1)
     def predict(self, x):
-        return self.__activation_prime[self.__num_layers -1 ](self.__feedforward(x))
+        return self.__activation_prime[self.__num_layers -2 ](self.__feedforward(x))
 
 
     #input: test_data - list of tuples (x, y) where x is the input and y is the expected output
@@ -117,14 +117,16 @@ class Network:
     #TODO (1)
     def __predict_batch(self, test_data):
         #get the number of correct predictions
-        test_results = [(self.__activation_prime[self.__num_layers -1](self.__feedforward(x)), self.__activation_prime[self.__num_layers-1](y)) for (x, y) in test_data]
+        test_results = [(self.__activation_prime[self.__num_layers -2](self.__feedforward(x)), self.__activation_prime[self.__num_layers-2](y)) for (x, y) in test_data]
         return test_results
 
 
     #input: test_data - list of tuples (x, y) where x is the input and y is the expected output
     #output: the accuracy of the network on the test_data
     def score(self, test_data):
-        return sum(int(x == y) for (x, y) in self.__predict_batch(test_data)) / len(test_data)
+        predictions = [np.argmax(self.__feedforward(x)) for x, _ in test_data]  # Assuming __feedforward returns a probability distribution
+        correct_count = sum(1 for pred, (_, y) in zip(predictions, test_data) if pred == np.argmax(y))
+        return correct_count / len(test_data)
     #setters
 
     #input: string with the name of the activation function
