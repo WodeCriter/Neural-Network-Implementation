@@ -10,9 +10,7 @@ class Network:
         self.__num_layers = len(sizes)
         #number of neurons in each layer
         self.__sizes = sizes
-        #initialize biases for each layer
         self.__biases = [np.random.randn(y, 1) for y in sizes[1:]]
-        #initialize weights for each layer
         self.__weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
 
         #activation function and its derivative for all layers exept output layer (for now)
