@@ -1,13 +1,15 @@
 import numpy as np
+import pandas as pd
 from sklearn.datasets import load_digits
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from network import Network
 
 def load_and_prepare_data():
-    digits = load_digits()
-    data = digits.data
-    targets = digits.target
+    # Load the data from the CSV file
+    df = pd.read_csv('MNIST-train.csv')
+    data = df.iloc[:, 1:].values  
+    targets = df.iloc[:, 0].values  
 
     # Normalize the data
     scaler = StandardScaler()
@@ -29,9 +31,9 @@ def load_and_prepare_data():
     return train_data, test_data
 
 def create_and_train_network(train_data, test_data):
-    # Network size corresponds to the input layer, hidden layers, and output layer
-    network_sizes = [64, 32, 10]  # Example: 64 input neurons (8x8 images), 32 hidden neurons, 10 output neurons
-    activations = ['sigmoid'] * 2  # Using sigmoid for hidden layers and softmax for output
+    network_sizes = [784, 128, 64, 10]  # configuration
+    activations = ['relu', 'relu', 'softmax']  # Using ReLU for hidden layers and softmax for output
+
     network = Network(sizes=network_sizes, activations=activations, output_activation='softmax')
 
     # Training the network

@@ -46,6 +46,9 @@ class Network:
             for mini_batch in mini_batches:
                 #update the weights and biases using the gradients of the cost function
                 self.update_mini_batch(mini_batch, learningRate)
+            #DEBUG
+            epoch_completion = 100 * (j + 1) / epochs
+            print(f"Epoch {j+1}/{epochs} complete: {epoch_completion:.2f}% of total training complete")
 
     #input: eta - learning rate
     def update_mini_batch(self, mini_batch, eta):
