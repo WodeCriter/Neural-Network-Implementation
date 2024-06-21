@@ -34,10 +34,10 @@ def create_and_train_network(train_data, test_data):
     network_sizes = [784, 128, 64, 10]  # configuration
     activations = ['relu', 'relu', 'softmax']  # Using ReLU for hidden layers and softmax for output
 
-    network = Network(sizes=network_sizes, activations=activations, output_activation='softmax')
+    network = Network(sizes=network_sizes, activations_functions_names=activations, output_activation_name='softmax', train_learning_rate=0.1)
 
     # Training the network
-    network.train(train_data, mini_batch_size=10, learningRate=0.1, epochs=100)
+    network.train(train_data, mini_batch_size=10, epochs=100)
 
     # Evaluate the network on test data
     accuracy = network.score(test_data)
