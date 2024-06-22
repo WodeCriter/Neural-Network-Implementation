@@ -209,10 +209,12 @@ class Network:
     
     #--softmax--
     def softmax(self, z):
-        return np.exp(z) / np.sum(np.exp(z), axis=0)
-    
+        exp_z = np.exp(z - np.max(z, axis=0, keepdims=True))  # Subtract max(z) for numerical stability
+        return exp_z / np.sum(exp_z, axis=0, keepdims=True)
+
     def softmax_prime(self, z):
-        return self.softmax(z) * (1 - self.softmax(z))
+        softmax_z = self.softmax(z)
+        return softmax_z * (1 - softmax_z)
     
     #--linear--
     def linear(self, z):
