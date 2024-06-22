@@ -8,8 +8,8 @@ from network import Network
 def load_and_prepare_data():
     # Load the data from the CSV file
     df = pd.read_csv('MNIST-train.csv')
-    data = df.iloc[:, 1:].values  
-    targets = df.iloc[:, 0].values  
+    targets = df["y"]
+    data = df.drop(columns=["y"])
 
     # Normalize the data
     scaler = StandardScaler()
