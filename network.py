@@ -6,7 +6,8 @@ from CostFunctions import CostFunctions
 #TODO(1) level 1 : instead of a single function, we can use a list of function pointers (one function for each layer)
 #TODO 1 change the feedforward function to use the list of activation functions and so on
 class Network:
-    def __init__(self, sizes , activations_functions_names=None, cost_function_name ='quadratic', output_activation_name='softmax', train_learning_rate=0.1):
+    def __init__(self, sizes , activations_functions_names=None, cost_function_name ='quadratic', output_activation_name='softmax'
+                 , train_learning_rate=0.1, train_mini_batch_size=10, train_epochs=1000):
         self.__num_layers = len(sizes)
         #number of neurons in each layer
         self.__sizes = sizes
@@ -21,6 +22,10 @@ class Network:
         self.__cost_derivative = None
         self.__init_cost_function_derivative(cost_function_name)
         self.__learning_rate = train_learning_rate
+        self.__mini_batch_size = train_mini_batch_size
+        self.__epochs = train_epochs
+        self.__original_labels = None
+        self.__fit_completed = False
 
     def __init_activation_function_lists(self, activations_funcs_names, output_activation_name):
         activation_func_list = []
@@ -53,17 +58,33 @@ class Network:
             i += 1
         return current_layer_vector
 
-    def train(self, training_data, mini_batch_size, epochs=1000):
-        for j in range(epochs):
+    def fit(self, X, y):
+        training_data = self.__init_fit_params(X, y)
+        for j in range(self.__epochs):
             random.shuffle(training_data)
             #divide the training data into mini batches
-            mini_batches = [training_data[k:k + mini_batch_size] for k in range(0, len(training_data), mini_batch_size)]
+            mini_batches = [training_data[k:k + self.__mini_batch_size]
+                            for k in range(0, len(training_data), self.__mini_batch_size)]
             for mini_batch in mini_batches:
                 #update the weights and biases using the gradients of the cost function
                 self.__update_mini_batch(mini_batch)
             #DEBUG
-            epoch_completion = 100 * (j + 1) / epochs
-            print(f"Epoch {j+1}/{epochs} complete: {epoch_completion:.2f}% of total training complete")
+            epoch_completion = 100 * (j + 1) / self.__epochs
+            print(f"Epoch {j+1}/{self.__epochs} complete: {epoch_completion:.2f}% of total training complete")
+
+        self.__fit_completed = True
+
+    def __init_fit_params(self, X, y):
+        self.__original_labels = np.unique(y)
+        # Reshape data to fit the network input (each input is a vector)
+        feature_vectors = X.reshape(X.shape[0], -1, 1)
+        # Convert labels to one-hot encoding
+        true_labels = np.eye(len(self.__original_labels))[y]
+        # Combine data and targets into a list of tuples
+        training_data = list(zip(feature_vectors, true_labels))
+
+        return training_data
+
 
     def __update_mini_batch(self, mini_batch):
         # Initialize the lists for the gradients of the cost function
@@ -133,13 +154,25 @@ class Network:
 
         return bias_gradients, weight_gradients
 
-    #TODO (1)
-    def predict(self, x):
-        return self.__activation_derivatives_list[self.__num_layers - 2](self.__feedforward(x))
+    def predict(self, X):
+        if self.__fit_completed:
+            X = np.array(X)
+            ROWS = 1
+            predictions = np.apply_along_axis(self.__predict_single_feature_vector, arr=X, axis=ROWS)
+            return predictions
+        else:
+            raise RuntimeError("Model has not been fitted yet. Please call fit() first.")
 
-    #input: test_data - list of tuples (x, y) where x is the input and y is the expected output
-    #output: the accuracy of the network on the test_data
-    def score(self, test_data):
-        predictions = [np.argmax(self.__feedforward(x)) for x, _ in test_data]  # Assuming __feedforward returns a probability distribution
-        correct_count = sum(1 for pred, (_, y) in zip(predictions, test_data) if pred == np.argmax(y))
-        return correct_count / len(test_data)
+    def __predict_single_feature_vector(self, feature_vector):
+        return self.__original_labels[np.argmax(self.__feedforward(feature_vector))]
+
+    def score(self, X, y):
+        if self.__fit_completed:
+            predictions = np.array(self.predict(X))
+            true_labels = np.array(y)
+            num_of_correct_classifications = np.sum(predictions == true_labels)
+            num_of_samples = len(X)
+            return num_of_correct_classifications / num_of_samples
+        else:
+            raise RuntimeError("Model has not been fitted yet. Please call fit() first.")
+
