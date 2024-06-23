@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import logging
 
 #TODO(1) level 1 : instead of a single function, we can use a list of function pointers (one function for each layer)
 #TODO 1 change the feedforward function to use the list of activation functions and so on
@@ -20,9 +21,28 @@ class Network:
         #activation function and its derivative for all layers exept output layer (for now)
         #TODO(1)
         self.__activation_func , self.__activation_prime  = self.___create_activation_function_lists(activations , self.__num_layers , output_activation)
-        
-        
         self.__cost_derivative = self.quadratic_cost_derivative
+        self.__logger = self.__setup_logger()
+
+    def __setup_logger(self):
+        logger = logging.getLogger('hyperparams-logger')
+        logger.propagate = False
+        logger.setLevel(logging.DEBUG)
+        if not logger.hasHandlers():
+            # Create formatter and add it to the handlers
+            formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s: %(message)s', datefmt='%d-%m-%Y %H:%M:%S')
+            # Create file handler for logging to a file
+            file_handler = logging.FileHandler('hyperparams.log')
+            file_handler.setLevel(logging.DEBUG)
+            file_handler.setFormatter(formatter)
+            # Create console handler for logging to a file
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(logging.DEBUG)
+            console_handler.setFormatter(formatter)
+            # Add handlers to the logger
+            logger.addHandler(file_handler)
+            logger.addHandler(console_handler)
+        return logger
 
     #given the input a, return the output of the network (for now, using sigmoid only)
     def __feedforward(self, a):
@@ -34,8 +54,8 @@ class Network:
             i += 1
         return a
 
-    def train(self, training_data,  mini_batch_size, learningRate = 0.1, epochs = 1000):
-
+    def train(self, training_data,  mini_batch_size, learningRate = 0.1, epochs = 1000, validation_data=None):
+        self.__logger.warn(f"Start train with: batch size={mini_batch_size}, learning rate={learningRate}, epochs={epochs}")
         #for each epoch
         for j in range(epochs):
             #shuffle the training data
@@ -47,8 +67,13 @@ class Network:
                 #update the weights and biases using the gradients of the cost function
                 self.update_mini_batch(mini_batch, learningRate)
             #DEBUG
-            epoch_completion = 100 * (j + 1) / epochs
-            print(f"Epoch {j+1}/{epochs} complete: {epoch_completion:.2f}% of total training complete")
+            self.__debug(j, epochs, validation_data)
+
+    def __debug(self, curr_epoch_num, total_epochs, validation_data):
+        epoch_completion = 100 * (curr_epoch_num + 1) / total_epochs
+        self.__logger.debug(f"Epoch {curr_epoch_num + 1}/{total_epochs} complete: {epoch_completion:.2f}% of total training complete")
+        accuracy = self.score(validation_data)
+        self.__logger.info(f"Test Accuracy in the {curr_epoch_num + 1} iteration: {accuracy * 100:.2f}%")
 
     #input: eta - learning rate
     def update_mini_batch(self, mini_batch, eta):
@@ -97,7 +122,7 @@ class Network:
         delta = self.__cost_derivative(activations[-1], y) * self.__activation_prime[-1](zs[-1])
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
-        i -= 1
+        i -= 2
         #propagate the error to the previous layers
         for l in range(2, self.__num_layers):
             z = zs[-l]

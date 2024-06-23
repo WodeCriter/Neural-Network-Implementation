@@ -31,17 +31,28 @@ def load_and_prepare_data():
     return train_data, test_data
 
 def create_and_train_network(train_data, test_data):
-    network_sizes = [784, 128, 64, 10]  # configuration
-    activations = ['relu', 'relu', 'softmax']  # Using ReLU for hidden layers and softmax for output
+    network_sizes_list = [[784, 128, 64, 10], [784, 256, 128, 64, 10]]
+    learning_rates = [0.25, 0.1, 0.01, 0.001]
+    mini_batch_sizes = [10, 30, 50]
+    epochs_list = [20]
 
-    network = Network(sizes=network_sizes, activations=activations, output_activation='softmax')
+    # Iterate over each set of hyperparameters
+    for network_sizes in network_sizes_list:
+        for learning_rate in learning_rates:
+            for mini_batch_size in mini_batch_sizes:
+                for epochs in epochs_list:
+                    activations = ['sigmoid'] * (len(network_sizes) - 2) + ['softmax']
 
-    # Training the network
-    network.train(train_data, mini_batch_size=10, learningRate=0.1, epochs=100)
+                    # Create a new instance of Network with current hyperparameters
+                    network = Network(sizes=network_sizes, activations=activations, output_activation='softmax')
 
-    # Evaluate the network on test data
-    accuracy = network.score(test_data)
-    print(f"Test Accuracy: {accuracy * 100:.2f}%")
+                    # Training the network
+                    network.train(train_data, mini_batch_size=mini_batch_size, learningRate=learning_rate,
+                                  epochs=epochs, validation_data=test_data)
+
+                    del network
+
+
 
 def main():
     train_data, test_data = load_and_prepare_data()
