@@ -28,21 +28,28 @@ def create_and_train_network(train_X_y, test_X_y):
     X_train, y_train = train_X_y
     X_test, y_test = test_X_y
 
-    network_sizes = [784, 128, 64, 10]  # configuration
-    activations = ['relu', 'relu', 'softmax']
+    network_sizes_list = [[784, 128, 64, 10], [784, 256, 128, 64, 10]]
+    learning_rates = [0.25, 0.1, 0.01, 0.001]
+    mini_batch_sizes = [10, 30, 50]
+    epochs_list = [20]
 
     test_vec = np.array([1,2,3,-1,21,-20])
-    res = ActivationFunctions.relu(test_vec)
+        for learning_rate in learning_rates:
+            for mini_batch_size in mini_batch_sizes:
+                for epochs in epochs_list:
+                    activations = ['sigmoid'] * (len(network_sizes) - 2) + ['softmax']
 
-    network = Network(sizes=network_sizes, activations_functions_names=activations, output_activation_name='softmax'
+                    # Create a new instance of Network with current hyperparameters
+    network = Network(sizes=network_sizes, activations=activations, output_activation='softmax')
                       , train_learning_rate=0.25, train_mini_batch_size=10, train_epochs=10)
 
-    # Training the network
-    network.fit(X_train, y_train, X_test, y_test)
+                    # Training the network
+    network.train(train_data, mini_batch_size=10, learningRate=0.1, epochs=100)
+                                  epochs=epochs, validation_data=test_data)
 
-    # Evaluate the network on test data
-    accuracy = network.score(X_test, y_test)
-    print(f"Test Accuracy: {accuracy * 100:.2f}%")
+                    del network
+    accuracy = network.score(test_data)
+
 
 def main():
     train_X_y, test_X_y = load_and_prepare_data()
