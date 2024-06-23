@@ -32,16 +32,16 @@ def load_and_prepare_data():
 
 def create_and_train_network(train_data, test_data):
     network_sizes_list = [[784, 128, 64, 10], [784, 256, 128, 64, 10]]
-    learning_rates = [0.5, 0.25, 0.1, 0.01, 0.001]
+    learning_rates = [0.25, 0.1, 0.01, 0.001]
     mini_batch_sizes = [10, 30, 50]
-    epochs_list = [10, 20]
+    epochs_list = [20]
 
     # Iterate over each set of hyperparameters
     for network_sizes in network_sizes_list:
         for learning_rate in learning_rates:
             for mini_batch_size in mini_batch_sizes:
                 for epochs in epochs_list:
-                    activations = ['relu'] * (len(network_sizes) - 2) + ['softmax']
+                    activations = ['sigmoid'] * (len(network_sizes) - 2) + ['softmax']
 
                     # Create a new instance of Network with current hyperparameters
                     network = Network(sizes=network_sizes, activations=activations, output_activation='softmax')
@@ -49,6 +49,8 @@ def create_and_train_network(train_data, test_data):
                     # Training the network
                     network.train(train_data, mini_batch_size=mini_batch_size, learningRate=learning_rate,
                                   epochs=epochs, validation_data=test_data)
+
+                    del network
 
 
 

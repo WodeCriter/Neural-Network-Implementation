@@ -28,19 +28,20 @@ class Network:
         logger = logging.getLogger('hyperparams-logger')
         logger.propagate = False
         logger.setLevel(logging.DEBUG)
-        # Create formatter and add it to the handlers
-        formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s: %(message)s', datefmt='%d-%m-%Y %H:%M:%S')
-        # Create file handler for logging to a file
-        file_handler = logging.FileHandler('hyperparams.log')
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(formatter)
-        # Create console handler for logging to a file
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.DEBUG)
-        console_handler.setFormatter(formatter)
-        # Add handlers to the logger
-        logger.addHandler(file_handler)
-        logger.addHandler(console_handler)
+        if not logger.hasHandlers():
+            # Create formatter and add it to the handlers
+            formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s: %(message)s', datefmt='%d-%m-%Y %H:%M:%S')
+            # Create file handler for logging to a file
+            file_handler = logging.FileHandler('hyperparams.log')
+            file_handler.setLevel(logging.DEBUG)
+            file_handler.setFormatter(formatter)
+            # Create console handler for logging to a file
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(logging.DEBUG)
+            console_handler.setFormatter(formatter)
+            # Add handlers to the logger
+            logger.addHandler(file_handler)
+            logger.addHandler(console_handler)
         return logger
 
     #given the input a, return the output of the network (for now, using sigmoid only)
