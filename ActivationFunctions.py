@@ -49,10 +49,13 @@ class ActivationFunctions:
 
     @staticmethod
     def softmax(z):
-        return np.exp(z) / np.sum(np.exp(z), axis=0)
+        # Subtract max(z) for numerical stability
+        exp_z = np.exp(z - np.max(z, axis=0, keepdims=True))
+        return exp_z / np.sum(exp_z, axis=0, keepdims=True)
     @staticmethod
     def softmax_prime(z):
-        return ActivationFunctions.softmax(z) * (1 - ActivationFunctions.softmax(z))
+        softmax_z = ActivationFunctions.softmax(z)
+        return softmax_z * (1 - softmax_z)
 
     @staticmethod
     def linear(z):

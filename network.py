@@ -2,12 +2,13 @@ import random
 import numpy as np
 from ActivationFunctions import ActivationFunctions
 from CostFunctions import CostFunctions
+import logging
 
 #TODO(1) level 1 : instead of a single function, we can use a list of function pointers (one function for each layer)
 #TODO 1 change the feedforward function to use the list of activation functions and so on
 class Network:
     def __init__(self, sizes , activations_functions_names=None, cost_function_name ='quadratic', output_activation_name='softmax'
-                 , train_learning_rate=0.1, train_mini_batch_size=10, train_epochs=1000):
+                 , train_learning_rate=0.1, train_mini_batch_size=10, train_epochs=100):
         self.__num_layers = len(sizes)
         #number of neurons in each layer
         self.__sizes = sizes
@@ -26,6 +27,8 @@ class Network:
         self.__epochs = train_epochs
         self.__original_labels = None
         self.__fit_completed = False
+        self.__logger = self.__setup_logger()
+
 
     def __init_activation_function_lists(self, activations_funcs_names, output_activation_name):
         activation_func_list = []
@@ -47,9 +50,30 @@ class Network:
     def __init_cost_function_derivative(self, cost_function_name):
         self.__cost_derivative = CostFunctions.get_cost_function_by_name(cost_function_name)
 
+    def __setup_logger(self):
+        logger = logging.getLogger('hyperparams-logger')
+        logger.propagate = False
+        logger.setLevel(logging.DEBUG)
+        if not logger.hasHandlers():
+            # Create formatter and add it to the handlers
+            formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s: %(message)s',
+                                          datefmt='%d-%m-%Y %H:%M:%S')
+            # Create file handler for logging to a file
+            file_handler = logging.FileHandler('hyperparams.log')
+            file_handler.setLevel(logging.DEBUG)
+            file_handler.setFormatter(formatter)
+            # Create console handler for logging to a file
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(logging.DEBUG)
+            console_handler.setFormatter(formatter)
+            # Add handlers to the logger
+            logger.addHandler(file_handler)
+            logger.addHandler(console_handler)
+        return logger
+
     def __feedforward(self, input_vector):
         i = 0
-        current_layer_vector = input_vector
+        current_layer_vector = input_vector.reshape(-1, 1)
         #feedforward the input a through the network
         for bias, weight in zip(self.__biases, self.__weights):
             #TODO(1)
@@ -58,7 +82,9 @@ class Network:
             i += 1
         return current_layer_vector
 
-    def fit(self, X, y):
+    def fit(self, X, y, validation_X=None, validation_y=None):
+        self.__fit_completed = True
+        # TODO: add try and catch
         training_data = self.__init_fit_params(X, y)
         for j in range(self.__epochs):
             random.shuffle(training_data)
@@ -69,10 +95,15 @@ class Network:
                 #update the weights and biases using the gradients of the cost function
                 self.__update_mini_batch(mini_batch)
             #DEBUG
-            epoch_completion = 100 * (j + 1) / self.__epochs
-            print(f"Epoch {j+1}/{self.__epochs} complete: {epoch_completion:.2f}% of total training complete")
+            self.__log(j, validation_X, validation_y)
 
-        self.__fit_completed = True
+    def __log(self, curr_epoch_num, validation_X, validation_y):
+        if validation_X is not None and validation_y is not None:
+            epoch_completion = 100 * (curr_epoch_num + 1) / self.__epochs
+            self.__logger.debug(
+                f"Epoch {curr_epoch_num + 1}/{self.__epochs} complete: {epoch_completion:.2f}% of total training complete")
+            accuracy = self.score(validation_X, validation_y)
+            self.__logger.info(f"Test Accuracy in the {curr_epoch_num + 1} iteration: {accuracy * 100:.2f}%")
 
     def __init_fit_params(self, X, y):
         self.__original_labels = np.unique(y)
@@ -80,6 +111,8 @@ class Network:
         feature_vectors = X.reshape(X.shape[0], -1, 1)
         # Convert labels to one-hot encoding
         true_labels = np.eye(len(self.__original_labels))[y]
+        # Reshape each one-hot encoded label to be (num_classes, 1)
+        true_labels = true_labels.reshape(true_labels.shape[0], -1, 1)
         # Combine data and targets into a list of tuples
         training_data = list(zip(feature_vectors, true_labels))
 
@@ -143,14 +176,12 @@ class Network:
         weight_gradients[-1] = np.dot(delta, all_vectors_after_activations[-2].transpose())
 
         # propagate the error to the previous layers
-        layer_index = len(self.__weights) - 1
         for l in range(2, self.__num_layers):
             weighted_input = weighted_inputs[-l]
-            activation_prime = self.__activation_derivatives_list[layer_index](weighted_input)
+            activation_prime = self.__activation_derivatives_list[-l](weighted_input)
             delta = np.dot(self.__weights[-l + 1].transpose(), delta) * activation_prime
             bias_gradients[-l] = delta
             weight_gradients[-l] = np.dot(delta, all_vectors_after_activations[-l - 1].transpose())
-            layer_index -= 1
 
         return bias_gradients, weight_gradients
 
@@ -164,7 +195,8 @@ class Network:
             raise RuntimeError("Model has not been fitted yet. Please call fit() first.")
 
     def __predict_single_feature_vector(self, feature_vector):
-        return self.__original_labels[np.argmax(self.__feedforward(feature_vector))]
+        index_of_predicted_value = np.argmax(self.__feedforward(feature_vector))
+        return self.__original_labels[index_of_predicted_value]
 
     def score(self, X, y):
         if self.__fit_completed:
