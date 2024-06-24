@@ -4,8 +4,7 @@ from ActivationFunctions import ActivationFunctions
 from CostFunctions import CostFunctions
 import logging
 
-#TODO(1) level 1 : instead of a single function, we can use a list of function pointers (one function for each layer)
-#TODO 1 change the feedforward function to use the list of activation functions and so on
+
 class Network:
     def __init__(self, sizes , activations_functions_names=None, cost_function_name ='quadratic', output_activation_name='softmax'
                  , train_learning_rate=0.1, train_mini_batch_size=10, train_epochs=100):
@@ -76,7 +75,6 @@ class Network:
         current_layer_vector = input_vector.reshape(-1, 1)
         #feedforward the input a through the network
         for bias, weight in zip(self.__biases, self.__weights):
-            #TODO(1)
             z = np.dot(weight, current_layer_vector) + bias
             current_layer_vector = self.__activation_func_list[i](z)
             i += 1
