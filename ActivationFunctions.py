@@ -6,6 +6,7 @@ class ActivationFunctions:
         # dictionary (of tuples) with all activation functions and their derivatives
         self.__activation_functions = {
             'relu': (ActivationFunctions.relu, ActivationFunctions.relu_prime),
+            'leaky_relu': (ActivationFunctions.leaky_relu, ActivationFunctions.leaky_relu_prime),
             'sigmoid': (ActivationFunctions.sigmoid, ActivationFunctions.sigmoid_prime),
             'tanh': (ActivationFunctions.tanh, ActivationFunctions.tanh_prime),
             'softmax': (ActivationFunctions.softmax, ActivationFunctions.softmax_prime),
@@ -32,6 +33,14 @@ class ActivationFunctions:
     @staticmethod
     def relu_prime(z):
         return np.where(z > 0, 1, 0)
+    
+    @staticmethod
+    def leaky_relu(z):
+        return np.where(z > 0, z, 0.01 * z)
+    
+    @staticmethod
+    def leaky_relu_prime(z):
+        return np.where(z > 0, 1, 0.01)
 
     @staticmethod
     def sigmoid(z):
