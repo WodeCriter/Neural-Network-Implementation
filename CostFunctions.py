@@ -6,7 +6,8 @@ class CostFunctions:
         # dictionary (of tuples) with all activation functions and their derivatives
         self.__cost_functions = {
             'quadratic': CostFunctions.quadratic_cost_derivative,
-            'huber': CostFunctions.huber_loss_derivative
+            'huber': CostFunctions.huber_loss_derivative,
+            'cross_entropy': CostFunctions.cross_entropy_derivative
         }
 
     @property
@@ -29,3 +30,8 @@ class CostFunctions:
     def huber_loss_derivative(output_activations, y):
         y = y.reshape(-1, 1)
         return np.where(np.abs(output_activations - y) <= 1, output_activations - y, np.sign(output_activations - y))
+    
+    @staticmethod
+    def cross_entropy_derivative(output_activations, y):
+        y = y.reshape(-1, 1)
+        return (output_activations - y) / (output_activations * (1 - output_activations))
