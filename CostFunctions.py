@@ -34,4 +34,4 @@ class CostFunctions:
     @staticmethod
     def cross_entropy_derivative(output_activations, y):
         y = y.reshape(-1, 1)
-        return (output_activations - y) / (output_activations * (1 - output_activations))
+        return (output_activations - y) / (output_activations * (1 - output_activations) + 1e-8)
