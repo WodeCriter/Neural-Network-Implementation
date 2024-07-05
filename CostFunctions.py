@@ -10,10 +10,12 @@ class CostFunctions:
         }
 
     @property
+    #cost functions property
     def Cost_functions(self):
         return self.__cost_functions
 
     @staticmethod
+    #Note: A more descriptive name might be get_cost_derivative_by_name
     def get_cost_function_by_name(func_name: str):
         cost_function_generator = CostFunctions()
         if func_name in cost_function_generator.Cost_functions:
@@ -22,10 +24,13 @@ class CostFunctions:
             raise ValueError(f'Cost function {func_name} not recognized')
 
     @staticmethod
+    # Quadratic cost function derivative
     def quadratic_cost_derivative(output_activations, y):
         y = y.reshape(-1, 1)
         return (output_activations - y)
+    
     @staticmethod
+    # Huber loss function derivative
     def huber_loss_derivative(output_activations, y):
         y = y.reshape(-1, 1)
         return np.where(np.abs(output_activations - y) <= 1, output_activations - y, np.sign(output_activations - y))

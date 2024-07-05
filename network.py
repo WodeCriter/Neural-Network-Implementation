@@ -15,8 +15,6 @@ class Network:
         self.__biases = [np.random.randn(y, 1)  for y in sizes[1:]]
         self.__weights = [np.random.randn(y, x) * np.sqrt(1./x) for x, y in zip(sizes[:-1], sizes[1:])]
         #stores a activation function name for each layer
-        #activation function and its derivative for all layers exept output layer (for now)
-        #TODO(1)
         self.__activation_func_list, self.__activation_derivatives_list = self.__init_activation_function_lists(
             activations_functions_names, output_activation_name)
         self.__cost_derivative = None
@@ -26,6 +24,7 @@ class Network:
         self.__epochs = train_epochs
         self.__original_labels = None
         self.__fit_completed = False
+        #Note : we can allow users to pass a custom logger or specify logging levels.
         self.__logger = self.__setup_logger()
 
 
@@ -82,7 +81,7 @@ class Network:
 
     def fit(self, X, y, validation_X=None, validation_y=None):
         self.__fit_completed = True
-        # TODO: add try and catch
+        # todp: add try-except blocks would handle unexpected errors gracefully
         training_data = self.__init_fit_params(X, y)
         for j in range(self.__epochs):
             random.shuffle(training_data)
@@ -190,6 +189,7 @@ class Network:
             predictions = np.apply_along_axis(self.__predict_single_feature_vector, arr=X, axis=ROWS)
             return predictions
         else:
+            #Note: do we need to raise an exception here? , or just raise a warning?
             raise RuntimeError("Model has not been fitted yet. Please call fit() first.")
 
     def __predict_single_feature_vector(self, feature_vector):
@@ -204,5 +204,6 @@ class Network:
             num_of_samples = len(X)
             return num_of_correct_classifications / num_of_samples
         else:
+            #Note: do we need to raise an exception here? , or just raise a warning?
             raise RuntimeError("Model has not been fitted yet. Please call fit() first.")
 
