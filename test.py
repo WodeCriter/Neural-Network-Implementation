@@ -32,7 +32,7 @@ def create_and_train_network(train_X_y, test_X_y):
     activations = ['relu', 'relu', 'softmax']
 
     network = Network(sizes=network_sizes, activations_functions_names=activations, output_activation_name='softmax'
-                      , train_learning_rate=0.01, train_mini_batch_size=10, train_epochs=10)
+                      , train_learning_rate=0.01, train_mini_batch_size=10, train_epochs=10, cost_function_name='cross_entropy')
 
     # Training the network
     network.fit(X_train, y_train, X_test, y_test)
