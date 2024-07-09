@@ -1,5 +1,6 @@
 import numpy as np
 
+STABILITY_CONSTANT = 1e-8
 
 class CostFunctions:
     def __init__(self):
@@ -39,4 +40,4 @@ class CostFunctions:
     @staticmethod
     def cross_entropy_derivative(output_activations, y):
         y = y.reshape(-1, 1)
-        return (output_activations - y) / (output_activations * (1 - output_activations) + 1e-8)
+        return (output_activations - y) / (output_activations * (1 - output_activations) + STABILITY_CONSTANT)
