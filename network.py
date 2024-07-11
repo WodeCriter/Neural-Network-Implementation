@@ -7,7 +7,7 @@ import logging
 
 class Network:
     def __init__(self, sizes , activations_functions_names=None, cost_function_name ='quadratic', output_activation_name='softmax'
-                 , train_learning_rate=0.1, train_mini_batch_size=10, train_epochs=100):
+                 , train_learning_rate=0.1, train_mini_batch_size=10, train_epochs=100, regularization_lambda=0.0):
         self.__num_layers = len(sizes)
         #number of neurons in each layer
         self.__sizes = sizes
@@ -19,6 +19,7 @@ class Network:
             activations_functions_names, output_activation_name)
         self.__cost_derivative = None
         self.__init_cost_function_derivative(cost_function_name)
+        self.__regularization_lambda = regularization_lambda
         self.__learning_rate = train_learning_rate
         self.__mini_batch_size = train_mini_batch_size
         self.__epochs = train_epochs
@@ -130,8 +131,7 @@ class Network:
             weight_gradients = [wg + dwg for wg, dwg in zip(weight_gradients, delta_weight_gradients)]
 
         # Update the weights and biases using the gradients and the learning rate
-        self.__weights = [weight - (self.__learning_rate / len(mini_batch)) * wg for weight, wg in
-                          zip(self.__weights, weight_gradients)]
+        self.__weights = [weight - (self.__learning_rate / len(mini_batch)) * wg - self.__regularization_lambda * weight for weight, wg in zip(self.__weights, weight_gradients)]
         self.__biases = [bias - (self.__learning_rate / len(mini_batch)) * bg for bias, bg in
                          zip(self.__biases, bias_gradients)]
 
