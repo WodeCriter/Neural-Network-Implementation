@@ -7,7 +7,7 @@ import logging
 
 class Network:
     def __init__(self, sizes , activations_functions_names=None, cost_function_name ='quadratic', output_activation_name='softmax'
-                 , train_learning_rate=0.1, train_mini_batch_size=10, train_epochs=100, regularization_lambda=0.0):
+                 , train_learning_rate=0.1, train_mini_batch_size=10, train_epochs=100, regularization_lambda=0.0, show_logs=True):
         self.__num_layers = len(sizes)
         #number of neurons in each layer
         self.__sizes = sizes
@@ -25,8 +25,9 @@ class Network:
         self.__epochs = train_epochs
         self.__original_labels = None
         self.__fit_completed = False
-        #Note : we can allow users to pass a custom logger or specify logging levels.
-        self.__logger = self.__setup_logger()
+        self.__show_logs = show_logs
+        if show_logs:
+            self.__logger = self.__setup_logger()
 
 
     def __init_activation_function_lists(self, activations_funcs_names, output_activation_name):
@@ -92,8 +93,8 @@ class Network:
             for mini_batch in mini_batches:
                 #update the weights and biases using the gradients of the cost function
                 self.__update_mini_batch(mini_batch)
-            #DEBUG
-            self.__log(j, validation_X, validation_y)
+            if self.__show_logs:
+                self.__log(j, validation_X, validation_y)
 
     def __log(self, curr_epoch_num, validation_X, validation_y):
         if validation_X is not None and validation_y is not None:
@@ -116,24 +117,29 @@ class Network:
 
         return training_data
 
-
     def __update_mini_batch(self, mini_batch):
         # Initialize the lists for the gradients of the cost function
         # with respect to the biases and weights
-        bias_gradients = [np.zeros(bias.shape) for bias in self.__biases]
-        weight_gradients = [np.zeros(weight.shape) for weight in self.__weights]
+        total_bias_gradients = [np.zeros(bias.shape) for bias in self.__biases]
+        total_weight_gradients = [np.zeros(weight.shape) for weight in self.__weights]
 
         for feature_vector, true_label in mini_batch:
             # Compute the gradients of the cost function using backpropagation
-            delta_bias_gradients, delta_weight_gradients = self.__backpropagation(feature_vector, true_label)
+            mini_batch_bias_gradients, mini_batch_weight_gradients = self.__backpropagation(feature_vector, true_label)
             # Accumulate the gradients of the batch
-            bias_gradients = [bg + dbg for bg, dbg in zip(bias_gradients, delta_bias_gradients)]
-            weight_gradients = [wg + dwg for wg, dwg in zip(weight_gradients, delta_weight_gradients)]
+            total_bias_gradients = [total_bias_gradient + mini_batch_bias_gradient for
+                                    total_bias_gradient, mini_batch_bias_gradient in
+                                    zip(total_bias_gradients, mini_batch_bias_gradients)]
+            total_weight_gradients = [total_weight_gradient + mini_batch_weight_gradient for
+                                      total_weight_gradient, mini_batch_weight_gradient in
+                                      zip(total_weight_gradients, mini_batch_weight_gradients)]
 
         # Update the weights and biases using the gradients and the learning rate
-        self.__weights = [weight - (self.__learning_rate / len(mini_batch)) * wg - self.__regularization_lambda * weight for weight, wg in zip(self.__weights, weight_gradients)]
-        self.__biases = [bias - (self.__learning_rate / len(mini_batch)) * bg for bias, bg in
-                         zip(self.__biases, bias_gradients)]
+        self.__weights = [weight - (self.__learning_rate / len(
+            mini_batch)) * total_weight_gradient - self.__regularization_lambda * weight for
+                          weight, total_weight_gradient in zip(self.__weights, total_weight_gradients)]
+        self.__biases = [bias - (self.__learning_rate / len(mini_batch)) * total_bias_gradient for
+                         bias, total_bias_gradient in zip(self.__biases, total_bias_gradients)]
 
     def __backpropagation(self, feature_vector, true_label):
         # Perform feedforward pass to compute activations and weighted inputs
