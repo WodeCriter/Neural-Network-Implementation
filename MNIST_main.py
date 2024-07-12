@@ -7,7 +7,7 @@ from network import Network
 def MNIST_main():
     train_X_y, test_X_y, validation_X_y = prepare_data('MNIST-train.csv', 'MNIST-test.csv')
     network = create_network_for_MNIST(train_X_y[0], train_X_y[1])
-    accuracy = train_and_test_network_for_MNIST(network, train_X_y, test_X_y, validation_X_y)
+    accuracy = network.train_and_test(train_X_y, validation_X_y, test_X_y)
     print(f"Test Accuracy: {accuracy * 100:.2f}%")
 
 def load_and_scale_data(data_csv_path):
@@ -51,15 +51,3 @@ def create_network_for_MNIST(X_train, y_train):
                       cost_function_name='cross_entropy', regularization_lambda=0.00001)
 
     return network
-
-def train_and_test_network_for_MNIST(network, train_X_y, test_X_y, validation_X_y):
-    X_train, y_train = train_X_y
-    X_test, y_test = test_X_y
-    X_validation, y_validation = validation_X_y
-
-    # Training the network
-    network.fit(X_train, y_train, X_validation, y_validation)
-    # Evaluate the network on test data
-    accuracy = network.score(X_test, y_test)
-
-    return accuracy
