@@ -83,18 +83,21 @@ class Network:
 
     def fit(self, X, y, validation_X=None, validation_y=None):
         self.__fit_completed = True
-        # todp: add try-except blocks would handle unexpected errors gracefully
-        training_data = self.__init_fit_params(X, y)
-        for j in range(self.__epochs):
-            random.shuffle(training_data)
-            #divide the training data into mini batches
-            mini_batches = [training_data[k:k + self.__mini_batch_size]
-                            for k in range(0, len(training_data), self.__mini_batch_size)]
-            for mini_batch in mini_batches:
-                #update the weights and biases using the gradients of the cost function
-                self.__update_mini_batch(mini_batch)
-            if self.__show_logs:
-                self.__log(j, validation_X, validation_y)
+        try:
+            training_data = self.__init_fit_params(X, y)
+            for curr_epoch_num in range(self.__epochs):
+                random.shuffle(training_data)
+                #divide the training data into mini batches
+                mini_batches = [training_data[k:k + self.__mini_batch_size]
+                                for k in range(0, len(training_data), self.__mini_batch_size)]
+                for mini_batch in mini_batches:
+                    #update the weights and biases using the gradients of the cost function
+                    self.__update_mini_batch(mini_batch)
+                if self.__show_logs:
+                    self.__log(curr_epoch_num, validation_X, validation_y)
+        except:
+            self.__fit_completed = False
+            raise Warning("Error has occurred, fit processes finished")
 
     def __log(self, curr_epoch_num, validation_X, validation_y):
         if validation_X is not None and validation_y is not None:
@@ -212,4 +215,19 @@ class Network:
         else:
             #Note: do we need to raise an exception here? , or just raise a warning?
             raise RuntimeError("Model has not been fitted yet. Please call fit() first.")
+
+    def train_and_test(self, train_X_y, validation_X_y, test_X_y=None):
+        X_train, y_train = train_X_y
+        X_validation, y_validation = validation_X_y
+
+        # Training the network
+        self.fit(X_train, y_train, X_validation, y_validation)
+        # Evaluate the network on test data
+        if test_X_y != None:
+            X_test, y_test = test_X_y
+            accuracy = self.score(X_test, y_test)
+        else:
+            accuracy = self.score(X_validation, y_validation)
+
+        return accuracy
 
