@@ -3,8 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from network import Network
-from ActivationFunctions import ActivationFunctions
-
+from sklearn.decomposition import PCA
 
 def load_and_scale_data(data_csv_path):
     # Load the data from the CSV file
@@ -24,6 +23,8 @@ def load_and_scale_MB_data(data_csv_path):
     true_labels = np.array(df.iloc[:, 0].tolist())
     true_labels = np.where(np.char.find(true_labels, 'Fibro') >= 0, 0, 1)
     data = df.drop(df.columns[0], axis=1)
+    pca = PCA(n_components=100)
+    data = pca.fit_transform(data)
     scaler = StandardScaler()
     data = scaler.fit_transform(data)
     data = np.array(data)
@@ -56,8 +57,8 @@ def create_and_train_network_for_MNIST(train_X_y, test_X_y, validation_X_y):
     num_of_input_features = X_train.shape[1]
     num_of_possible_outputs = len(np.unique(y_train))
 
-    network_sizes = [num_of_input_features, 256, 128, 64, num_of_possible_outputs]  # configuration
-    activations = ['leaky_relu', 'leaky_relu','leaky_relu', 'softmax']
+    network_sizes = [num_of_input_features, 1024, 512, 256, 128, 64, 16, 8, num_of_possible_outputs]  # configuration
+    activations = ['leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', 'softmax']
 
     network = Network(sizes=network_sizes, activations_functions_names=activations, output_activation_name='softmax'
                       , train_learning_rate=0.01, train_mini_batch_size=10, train_epochs=100, cost_function_name='cross_entropy', regularization_lambda=0.00001)
@@ -75,11 +76,11 @@ def create_and_train_network_for_MB(train_X_y, validation_X_y):
     num_of_input_features = X_train.shape[1]
     num_of_possible_outputs = len(np.unique(y_train))
 
-    network_sizes = [num_of_input_features, 1024, 512, 256, 128, 64, 16, 8, num_of_possible_outputs]  # configuration
-    activations = ['leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', 'softmax']
+    network_sizes = [num_of_input_features, 64, 32, 16, 8, 4, num_of_possible_outputs]  # configuration
+    activations = ['leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', "leaky_relu", 'softmax']
 
     network = Network(sizes=network_sizes, activations_functions_names=activations, output_activation_name='softmax'
-                      , train_learning_rate=0.01, train_mini_batch_size=5, train_epochs=10000, cost_function_name='cross_entropy', regularization_lambda=0.1)
+                      , train_learning_rate=0.001, train_mini_batch_size=10, train_epochs=10000, cost_function_name='cross_entropy', regularization_lambda=0.0001)
 
     # Training the network
     network.fit(X_train, y_train, X_validation, y_validation)
@@ -93,7 +94,7 @@ def MNIST_main():
     create_and_train_network_for_MNIST(train_X_y, test_X_y, validation_X_y)
 
 def MB_main():
-    train_X_y, validation_X_y = prepare_data("MB_data_train.csv", load_and_scale_data_function=load_and_scale_MB_data, validation_size=0.15)
+    train_X_y, validation_X_y = prepare_data("MB_data_train.csv", load_and_scale_data_function=load_and_scale_MB_data)
     create_and_train_network_for_MB(train_X_y, validation_X_y)
 
 if __name__ == '__main__':
