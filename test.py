@@ -4,6 +4,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from network import Network
 from sklearn.decomposition import PCA
+from sklearn.model_selection import KFold
+
+def MNIST_main():
+    train_X_y, test_X_y, validation_X_y = prepare_data('MNIST-train.csv', 'MNIST-test.csv')
+    network = create_network_for_MNIST(train_X_y[0], train_X_y[1])
+    accuracy = train_and_test_network_for_MNIST(network, train_X_y, test_X_y, validation_X_y)
+    print(f"Test Accuracy: {accuracy * 100:.2f}%")
 
 def load_and_scale_data(data_csv_path):
     # Load the data from the CSV file
@@ -14,20 +21,6 @@ def load_and_scale_data(data_csv_path):
     data = scaler.fit_transform(data)
     data = np.array(data)
     true_labels = np.array(true_labels)
-
-    return data, true_labels
-
-def load_and_scale_MB_data(data_csv_path):
-    # Load the data from the CSV file
-    df = pd.read_csv(data_csv_path)
-    true_labels = np.array(df.iloc[:, 0].tolist())
-    true_labels = np.where(np.char.find(true_labels, 'Fibro') >= 0, 0, 1)
-    data = df.drop(df.columns[0], axis=1)
-    pca = PCA(n_components=100)
-    data = pca.fit_transform(data)
-    scaler = StandardScaler()
-    data = scaler.fit_transform(data)
-    data = np.array(data)
 
     return data, true_labels
 
@@ -48,54 +41,85 @@ def prepare_data(train_data_csv_path, test_data_csv_path=None, load_and_scale_da
     else:
         return train_X_y, validation_X_y
 
-
-
-def create_and_train_network_for_MNIST(train_X_y, test_X_y, validation_X_y):
-    X_train, y_train = train_X_y
-    X_test, y_test = test_X_y
-    X_validation, y_validation = validation_X_y
+def create_network_for_MNIST(X_train, y_train):
     num_of_input_features = X_train.shape[1]
     num_of_possible_outputs = len(np.unique(y_train))
 
-    network_sizes = [num_of_input_features, 1024, 512, 256, 128, 64, 16, 8, num_of_possible_outputs]  # configuration
-    activations = ['leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', 'softmax']
+    network_sizes = [num_of_input_features, 256, 128, 64, num_of_possible_outputs]  # configuration
+    activations = ['leaky_relu', 'leaky_relu', 'leaky_relu', 'softmax']
 
     network = Network(sizes=network_sizes, activations_functions_names=activations, output_activation_name='softmax'
-                      , train_learning_rate=0.01, train_mini_batch_size=10, train_epochs=100, cost_function_name='cross_entropy', regularization_lambda=0.00001)
+                      , train_learning_rate=0.01, train_mini_batch_size=10, train_epochs=100,
+                      cost_function_name='cross_entropy', regularization_lambda=0.00001)
+
+    return network
+
+def train_and_test_network_for_MNIST(network, train_X_y, test_X_y, validation_X_y):
+    X_train, y_train = train_X_y
+    X_test, y_test = test_X_y
+    X_validation, y_validation = validation_X_y
 
     # Training the network
     network.fit(X_train, y_train, X_validation, y_validation)
-
     # Evaluate the network on test data
     accuracy = network.score(X_test, y_test)
-    print(f"Test Accuracy: {accuracy * 100:.2f}%")
 
-def create_and_train_network_for_MB(train_X_y, validation_X_y):
-    X_train, y_train = train_X_y
-    X_validation, y_validation = validation_X_y
+    return accuracy
+
+
+def MB_main():
+    data_csv_path = "MB_data_train.csv"
+    data, true_labels = load_and_scale_MB_data(data_csv_path)
+    network = create_network_for_MB(data, true_labels)
+    k_fold = KFold(n_splits=20, shuffle=True, random_state=1)
+    accuracies = []
+
+    for train_index, validation_index in k_fold.split(data):
+        X_train, X_validation = data[train_index], data[validation_index]
+        y_train, y_validation = true_labels[train_index], true_labels[validation_index]
+
+        accuracy = train_and_test_network_for_MB(network, X_train, y_train, X_validation, y_validation)
+        accuracies.append(accuracy)
+
+    print(f"Average Accuracy: {np.mean(accuracies) * 100:.2f}%")
+    print(f"Accuracies for each fold: {accuracies}")
+
+def load_and_scale_MB_data(data_csv_path):
+    # Load the data from the CSV file
+    df = pd.read_csv(data_csv_path)
+    true_labels = np.array(df.iloc[:, 0].tolist())
+    true_labels = np.where(np.char.find(true_labels, 'Fibro') >= 0, 0, 1)
+    data = df.drop(df.columns[0], axis=1)
+    pca = PCA(n_components=100)
+    data = pca.fit_transform(data)
+    scaler = StandardScaler()
+    data = scaler.fit_transform(data)
+    data = np.array(data)
+
+    return data, true_labels
+
+def train_and_test_network_for_MB(network, X_train, y_train, X_validation, y_validation):
+    # Training the network
+    network.fit(X_train, y_train, X_validation, y_validation)
+    # Evaluate the network on validation data
+    accuracy = network.score(X_validation, y_validation)
+
+    return accuracy
+
+def create_network_for_MB(X_train, y_train):
     num_of_input_features = X_train.shape[1]
     num_of_possible_outputs = len(np.unique(y_train))
 
     network_sizes = [num_of_input_features, 64, 32, 16, 8, 4, num_of_possible_outputs]  # configuration
-    activations = ['leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', "leaky_relu", 'softmax']
+    activations = ['leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', 'softmax']
 
-    network = Network(sizes=network_sizes, activations_functions_names=activations, output_activation_name='softmax'
-                      , train_learning_rate=0.001, train_mini_batch_size=10, train_epochs=10000, cost_function_name='cross_entropy', regularization_lambda=0.0001)
+    network = Network(sizes=network_sizes, activations_functions_names=activations, train_learning_rate=0.001,
+                      train_mini_batch_size=10, train_epochs=100, cost_function_name='cross_entropy',
+                      regularization_lambda=0.0001, show_logs=False)
 
-    # Training the network
-    network.fit(X_train, y_train, X_validation, y_validation)
+    return network
 
-    # Evaluate the network on test data
-    accuracy = network.score(X_validation, y_validation)
-    print(f"Test Accuracy: {accuracy * 100:.2f}%")
-
-def MNIST_main():
-    train_X_y, test_X_y, validation_X_y = prepare_data('MNIST-train.csv', 'MNIST-test.csv')
-    create_and_train_network_for_MNIST(train_X_y, test_X_y, validation_X_y)
-
-def MB_main():
-    train_X_y, validation_X_y = prepare_data("MB_data_train.csv", load_and_scale_data_function=load_and_scale_MB_data)
-    create_and_train_network_for_MB(train_X_y, validation_X_y)
 
 if __name__ == '__main__':
+    MNIST_main()
     MB_main()
